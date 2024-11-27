@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -48,18 +49,18 @@ func (s *HttpServer) InitServer() {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
-	log.Println("Server is running on :", s.port)
+	slog.Info(fmt.Sprintf("Server is running on :%s", s.port))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Server is shutting down...")
+	slog.Info("Server is shutting down...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := s.server.Shutdown(ctx); err != nil {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
-	log.Println("Server stopped gracefully")
+	slog.Info("Server stopped gracefully")
 }

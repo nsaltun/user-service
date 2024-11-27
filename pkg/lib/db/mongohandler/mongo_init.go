@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/slog"
 	"time"
 
 	"github.com/spf13/viper"
@@ -57,7 +58,7 @@ func newMongoDB() (MongoDBWrapper, error) {
 		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
 	}
 
-	log.Println("Connected to MongoDB")
+	slog.InfoContext(ctx, "Connected to MongoDB")
 
 	// Return the concrete implementation of MongoDBWrapper
 	return &mongoDBWrapper{
@@ -77,8 +78,8 @@ func (m *mongoDBWrapper) Disconnect() {
 	defer cancel()
 
 	if err := m.client.Disconnect(ctx); err != nil {
-		log.Printf("Failed to disconnect from MongoDB: %v", err)
+		slog.InfoContext(ctx, "Failed to disconnect from MongoDB: %v", err)
 	} else {
-		log.Println("Disconnected from MongoDB")
+		slog.InfoContext(ctx, "Disconnected from MongoDB")
 	}
 }

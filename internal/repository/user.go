@@ -2,8 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"log/slog"
 	"time"
 
@@ -52,11 +50,11 @@ func (r *userRepository) createIndexes() error {
 	defer cancel()
 	_, err := r.collection.Indexes().CreateMany(ctx, indexModels)
 	if err != nil {
-		log.Printf("Error creating indexes for users collection: %v", err)
+		slog.ErrorContext(ctx, "Error creating indexes for users collection", slog.Any("error", err))
 		return err
 	}
 
-	log.Println("Indexes created successfully for users collection.")
+	slog.InfoContext(ctx, "Indexes created successfully for users collection.")
 	return nil
 }
 
@@ -67,12 +65,14 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	user.Meta = model.NewMeta()
 	_, err := r.collection.InsertOne(ctx, user)
 	if err != nil && mongo.IsDuplicateKeyError(err) {
-		slog.Info("already exists with the same nickname or email.", slog.Any("error", err))
+		slog.InfoContext(ctx, "already exists with the same nickname or email.", slog.Any("error", err))
 		return errwrap.ErrConflict.SetMessage("already exists with the same nickname or email")
 	}
 
 	// empty password to not return in the api response
 	user.Password = ""
+
+	slog.ErrorContext(ctx, "mongo create user error", slog.Any("error", err), slog.Any("user", user))
 	return err
 }
 
@@ -87,7 +87,7 @@ func (r *userRepository) Update(ctx context.Context, id string, user *model.User
 	opt := options.FindOneAndUpdate().
 		SetReturnDocument(options.After).
 		SetProjection(bson.M{
-			"password": 0,
+			"password": 0, //exclude password from the response
 		})
 
 	user.Meta.Update()
@@ -104,13 +104,22 @@ func (r *userRepository) Update(ctx context.Context, id string, user *model.User
 		bson.M{"$set": userM, "$inc": bson.M{"version": 1}},
 		opt)
 
-	if updatedUserM.Err() != nil {
-		return nil, updatedUserM.Err()
+	if err := updatedUserM.Err(); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errwrap.ErrNotFound.SetMessage("record not found")
+		} else if mongo.IsDuplicateKeyError(err) {
+			slog.InfoContext(ctx, "user update failed with duplicate key error", slog.Any("error", err), slog.Any("userBson", userM))
+			return nil, errwrap.ErrConflict.SetMessage("unique constraint violated").SetOriginError(err)
+		}
+
+		slog.InfoContext(ctx, "user update failed.", slog.Any("error", err), slog.Any("userBson", userM))
+		return nil, errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 
 	var updatedUser *model.User
 	if err := updatedUserM.Decode(&updatedUser); err != nil {
-		return nil, err
+		slog.InfoContext(ctx, "error while decoding bson user to user model", slog.Any("error", err), slog.Any("updatedUserBson", updatedUser))
+		return nil, errwrap.ErrInternal.SetMessage("user decode error").SetOriginError(err)
 	}
 
 	return updatedUser, nil
@@ -123,7 +132,8 @@ func (r *userRepository) ListByFilter(ctx context.Context, filter bson.M, limit 
 	// Find the total count of documents that match the filter
 	totalCount, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return nil, 0, err
+		slog.ErrorContext(ctx, "error from mongo while counting documents", slog.Any("error", err.Error()))
+		return nil, 0, errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 
 	// Define MongoDB options for pagination
@@ -137,16 +147,18 @@ func (r *userRepository) ListByFilter(ctx context.Context, filter bson.M, limit 
 	// Query the database using the provided filter and options
 	cursor, err := r.collection.Find(ctx, filter, findOptions)
 	if err != nil {
+		slog.InfoContext(ctx, "error from mongo while finding docs by filter.", slog.Any("error", err))
 		if err == mongo.ErrNoDocuments {
 			return nil, 0, errwrap.ErrNotFound.SetMessage("user record not found")
 		}
-		return nil, 0, err
+		return nil, 0, errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 	defer cursor.Close(ctx)
 
 	// Decode users from the cursor
 	if err := cursor.All(ctx, &users); err != nil {
-		return nil, 0, err
+		slog.InfoContext(ctx, "error from mongo cursor while getting docs by filter.", slog.Any("error", err))
+		return nil, 0, errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 
 	return users, totalCount, nil
@@ -203,10 +215,11 @@ func (r *userRepository) checkUniqueness(ctx context.Context, id string, user *m
 
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
-		return fmt.Errorf("failed to check uniqueness: %v", err)
+		slog.ErrorContext(ctx, "failed to check user uniqueness from mongo", slog.Any("error", err.Error()), slog.Any("userFilter", filter))
+		return errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 	if count > 0 {
-		return fmt.Errorf("unique constraint violated")
+		return errwrap.ErrConflict.SetMessage("nickname or email should be unique").SetOriginError(err)
 	}
 
 	return nil
