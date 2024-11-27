@@ -6,8 +6,10 @@ type IError interface {
 	error
 	SetMessage(msg string) IError
 	SetHttpCode(code int) IError
+	SetOriginError(err error) IError
 	HttpCode() int
 	ErrorResp() ErrorResponse
+	OriginErr() error
 }
 
 type errorWrapper struct {
@@ -41,6 +43,12 @@ func (e *errorWrapper) SetHttpCode(code int) IError {
 	return newErr
 }
 
+func (e *errorWrapper) SetOriginError(err error) IError {
+	newErr := e.clone()
+	newErr.originErr = err
+	return newErr
+}
+
 func (e *errorWrapper) HttpCode() int {
 	return e.httpCode
 }
@@ -54,6 +62,10 @@ func (e *errorWrapper) ErrorResp() ErrorResponse {
 
 func (e *errorWrapper) Error() string {
 	return fmt.Sprintf("%s code:%s", e.message, e.code)
+}
+
+func (e *errorWrapper) OriginErr() error {
+	return e.originErr
 }
 
 func (e *errorWrapper) clone() *errorWrapper {
