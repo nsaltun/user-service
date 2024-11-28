@@ -6,11 +6,28 @@ services:
       - "27017:27017"
     volumes:
       - mongodb_data:/data/db
-    # environment:
-      # MONGO_INITDB_ROOT_USERNAME: root
-      # MONGO_INITDB_ROOT_PASSWORD: example
     pull_policy: never  # Ensures the image won't be pulled if it already exists
+    networks:
+      - app_network
+  user_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: user-api
+    depends_on:
+      - mongodb # Ensure MongoDB starts first
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017
+    
+    ports:
+      - "8080:3000" # Expose Go app port
+    networks:
+      - app_network
 
 volumes:
   mongodb_data:
     driver: local
+
+networks:
+  app_network:
+    driver: bridge

@@ -38,11 +38,10 @@ func newMongoDB() (MongoDBWrapper, error) {
 	vi := viper.New()
 	vi.AutomaticEnv()
 
-	uri := "mongodb://localhost:27017"
-	dbName := "users"
-
-	vi.SetDefault("MONGODB_URI", uri)
-	vi.SetDefault("DB_NAME", dbName)
+	vi.SetDefault("MONGODB_URI", "mongodb://127.0.0.1:27017")
+	vi.SetDefault("DB_NAME", "users")
+	uri := vi.GetString("MONGODB_URI")
+	dbName := vi.GetString("DB_NAME")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -58,7 +57,7 @@ func newMongoDB() (MongoDBWrapper, error) {
 		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
 	}
 
-	slog.InfoContext(ctx, "Connected to MongoDB")
+	slog.InfoContext(ctx, fmt.Sprintf("Connected to MongoDB with %s", uri))
 
 	// Return the concrete implementation of MongoDBWrapper
 	return &mongoDBWrapper{
@@ -78,7 +77,7 @@ func (m *mongoDBWrapper) Disconnect() {
 	defer cancel()
 
 	if err := m.client.Disconnect(ctx); err != nil {
-		slog.InfoContext(ctx, "Failed to disconnect from MongoDB: %v", err)
+		slog.InfoContext(ctx, "Failed to disconnect from MongoDB", slog.Any("error", err))
 	} else {
 		slog.InfoContext(ctx, "Disconnected from MongoDB")
 	}

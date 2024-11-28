@@ -1,13 +1,16 @@
 +++++1. Slog configuration for printing in Json format
 2. Http middlewares:
     1. Logging middleware which should log both request and response.
-    2. [maybe] Error handling middleware which should get error object and map to the response properly.
 3. [maybe] Request Validation
 +++4. Mongo DB initialization
 +++5. Pagination
 6. Docker
 7. Makefile
 8. Unit tests
+    +++ 1. service tests
+    2. repo tests
+    3. handler tests
+    4. lib tests
 9. Readme
 ++10. Error handling ***
 +++11. Fix Update
@@ -26,6 +29,6 @@
     2.2 Check places for log.Fatalf or panic
 3. Unit tests
 4. Makefile
-5. Log req resp middleware and Slog configuration
+5. Log req resp middleware
 6. Readme
 7. add auth middleware just as a template handler

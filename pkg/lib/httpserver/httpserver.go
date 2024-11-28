@@ -15,21 +15,19 @@ import (
 )
 
 type HttpServer struct {
-	port   string
 	server *http.Server
 }
 
 func NewServer(mux *http.ServeMux) *HttpServer {
 	vi := viper.New()
 	vi.AutomaticEnv()
-	vi.SetDefault("HOST_ADDRESS", "localhost")
+	vi.SetDefault("HOST_ADDRESS", "0.0.0.0")
 	vi.SetDefault("PORT", "3000")
 	vi.SetDefault("READ_TIMEOUT_IN_SECONDS", 10)
 	vi.SetDefault("WRITE_TIMEOUT_IN_SECONDS", 10)
 	vi.SetDefault("IDLE_TIMEOUT_IN_SECONDS", 10)
 
 	return &HttpServer{
-		port: vi.GetString("PORT"),
 		server: &http.Server{
 			Addr:         fmt.Sprintf("%s:%s", vi.Get("HOST_ADDRESS"), vi.Get("PORT")),
 			Handler:      mux,
@@ -42,14 +40,13 @@ func NewServer(mux *http.ServeMux) *HttpServer {
 }
 
 func (s *HttpServer) InitServer() {
-
 	// Graceful Shutdown Handling
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("HTTP server error: %v", err)
 		}
 	}()
-	slog.Info(fmt.Sprintf("Server is running on :%s", s.port))
+	slog.Info(fmt.Sprintf("Server is running on : %s", s.server.Addr))
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
