@@ -15,12 +15,11 @@ import (
 )
 
 func TestCreate(t *testing.T) {
-	type setupFunc func(*repomocks.UserRepository, *model.User)
 	noSetup := func(*repomocks.UserRepository, *model.User) {}
 	tests := []struct {
 		name        string
 		userRequest *model.User
-		setup       setupFunc
+		setup       func(*repomocks.UserRepository, *model.User)
 		assertResp  require.ValueAssertionFunc
 		assertErr   require.ErrorAssertionFunc
 	}{

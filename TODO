@@ -9,7 +9,7 @@
 8. Unit tests
     +++ 1. service tests
     2. repo tests
-    3. handler tests
+    +++3. handler tests
     4. lib tests
 9. Readme
 ++10. Error handling ***
@@ -24,11 +24,11 @@
 ---- Order -----
 +++0. Separate handler from the service
 +++1. Docker
-++2. Error Handling
-    2.1 Check all places if returning any fmt.Errorf or smth like that
-    2.2 Check places for log.Fatalf or panic
++++2. Error Handling
+    +++2.1 Check all places if returning any fmt.Errorf or smth like that
+    +++2.2 Check places for log.Fatalf or panic
 3. Unit tests
-4. Makefile
++++4. Makefile
 5. Log req resp middleware
 6. Readme
 7. add auth middleware just as a template handler
