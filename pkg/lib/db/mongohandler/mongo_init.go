@@ -12,9 +12,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+var (
+	ConnectionTimeoutInSeconds time.Duration = 3 * time.Second
+)
+
 // MongoDBWrapper defines an interface for interacting with the MongoDB database
 type MongoDBWrapper interface {
-	Collection(name string) *mongo.Collection
+	Collection(name string) Collection
 	Disconnect()
 }
 
@@ -43,7 +47,7 @@ func newMongoDB() (MongoDBWrapper, error) {
 	uri := vi.GetString("MONGODB_URI")
 	dbName := vi.GetString("DB_NAME")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), ConnectionTimeoutInSeconds)
 	defer cancel()
 
 	// Initialize MongoDB client
@@ -67,8 +71,10 @@ func newMongoDB() (MongoDBWrapper, error) {
 }
 
 // Collection returns a MongoDB collection from the wrapped database
-func (m *mongoDBWrapper) Collection(name string) *mongo.Collection {
-	return m.database.Collection(name)
+func (m *mongoDBWrapper) Collection(name string) Collection {
+	return &collection{
+		m.database.Collection(name),
+	}
 }
 
 // Disconnect gracefully closes the MongoDB connection

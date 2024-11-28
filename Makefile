@@ -24,7 +24,9 @@ mockery-install:
 
 mocks: mockery-install
 	rm -rf internal/mocks
+	rm -rf pkg/mocks
 	mockery  --dir internal --all --keeptree --output internal/mocks
+	mockery  --dir pkg --all --keeptree --output pkg/mocks
 
 .PHONY: docker-build
 docker-build:
