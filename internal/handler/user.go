@@ -27,8 +27,8 @@ func NewUserHandler(userService service.UserService) UserHandler {
 }
 
 func (u *userHandler) CreateUser(c *httpwrap.HttpContext) error {
-	var user *model.User
-	if err := c.BodyParser(user); err != nil {
+	var user model.User
+	if err := c.BodyParser(&user); err != nil {
 		slog.Info("error while unmarshalling request body.", slog.Any("error", err.Error()))
 		return c.JSON(http.StatusBadRequest, errwrap.ErrorResponse{
 			Code:    strconv.Itoa(http.StatusBadRequest),
@@ -38,7 +38,7 @@ func (u *userHandler) CreateUser(c *httpwrap.HttpContext) error {
 
 	//TODO: validate create user request
 
-	createdUser, err := u.userService.CreateUser(c.Request.Context(), user)
+	createdUser, err := u.userService.CreateUser(c.Request.Context(), &user)
 	if err != nil {
 		iError, ok := err.(errwrap.IError)
 		if !ok {

@@ -10,11 +10,14 @@ run:
 createuserreq:
 	curl -X POST localhost:3000/users -d '{"firstName":"enes"}'
 
-compose-up:
+compose-up: compose-down
 	docker compose up --build -d 
 
 compose-down:
 	docker compose down
+
+mongo-up:
+	docker compose up mongodb -d
 
 mockery-install:
 	go install github.com/vektra/mockery/v2/...@v$(MOCKERY_VERSION)

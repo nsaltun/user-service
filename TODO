@@ -4,8 +4,8 @@
 3. [maybe] Request Validation
 +++4. Mongo DB initialization
 +++5. Pagination
-6. Docker
-7. Makefile
++++6. Docker
++++7. Makefile
 8. Unit tests
     +++ 1. service tests
     2. repo tests
@@ -23,7 +23,7 @@
 
 ---- Order -----
 +++0. Separate handler from the service
-1. Docker
++++1. Docker
 ++2. Error Handling
     2.1 Check all places if returning any fmt.Errorf or smth like that
     2.2 Check places for log.Fatalf or panic

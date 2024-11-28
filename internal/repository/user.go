@@ -64,16 +64,21 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 	user.Status = model.UserStatus_Active
 	user.Meta = model.NewMeta()
 	_, err := r.collection.InsertOne(ctx, user)
-	if err != nil && mongo.IsDuplicateKeyError(err) {
-		slog.InfoContext(ctx, "already exists with the same nickname or email.", slog.Any("error", err))
-		return errwrap.ErrConflict.SetMessage("already exists with the same nickname or email")
-	}
 
 	// empty password to not return in the api response
+	// NOTE: empty password before logging error to not leak password in logs
 	user.Password = ""
 
-	slog.ErrorContext(ctx, "mongo create user error", slog.Any("error", err), slog.Any("user", user))
-	return err
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			slog.InfoContext(ctx, "already exists with the same nickname or email.", slog.Any("error", err))
+			return errwrap.ErrConflict.SetMessage("already exists with the same nickname or email")
+		}
+		slog.ErrorContext(ctx, "mongo create user error", slog.Any("error", err), slog.Any("user", user))
+		return errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
+	}
+
+	return nil
 }
 
 // Update user by id
@@ -181,8 +186,12 @@ func (r *userRepository) Delete(ctx context.Context, id string) error {
 		bson.M{"$set": userM},
 		opt)
 
-	if updatedUserM.Err() != nil {
-		return updatedUserM.Err()
+	if err := updatedUserM.Err(); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return errwrap.ErrNotFound.SetMessage("record not found")
+		}
+		slog.ErrorContext(ctx, "mongo error while deleting user", slog.Any("error", err), slog.Any("id", id))
+		return errwrap.ErrInternal.SetMessage("internal error").SetOriginError(err)
 	}
 
 	return nil
@@ -236,6 +245,7 @@ func sanitizeUserForUpdate(user *model.User) bson.M {
 		"email":     user.Email,
 		"country":   user.Country,
 		"updatedAt": user.UpdatedAt,
+		"status":    user.Status,
 	}
 }
 
