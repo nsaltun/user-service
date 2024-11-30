@@ -18,7 +18,7 @@ var (
 
 // MongoDBWrapper defines an interface for interacting with the MongoDB database
 type MongoDBWrapper interface {
-	Collection(name string) Collection
+	Collection(name string) *mongo.Collection
 	HealthCheck(ctx context.Context) error
 	Disconnect()
 }
@@ -73,10 +73,8 @@ func newMongoDB() (MongoDBWrapper, error) {
 }
 
 // Collection returns a MongoDB collection from the wrapped database
-func (m *mongoDBWrapper) Collection(name string) Collection {
-	return &collection{
-		m.database.Collection(name),
-	}
+func (m *mongoDBWrapper) Collection(name string) *mongo.Collection {
+	return m.database.Collection(name)
 }
 
 // Disconnect gracefully closes the MongoDB connection

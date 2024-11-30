@@ -57,10 +57,10 @@ func (h *healthCheck) HealthCheckHandler() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		if health.Status == "unhealthy" {
-			slog.Error("service is unhealthy", slog.Any("health", health))
+			slog.ErrorContext(ctx, "service is unhealthy", slog.Any("health", health))
 			w.WriteHeader(http.StatusServiceUnavailable)
 		} else {
-			slog.Info("service is healthy", slog.Any("health", health))
+			slog.DebugContext(ctx, "service is healthy", slog.Any("health", health))
 			w.WriteHeader(http.StatusOK)
 		}
 		json.NewEncoder(w).Encode(health)

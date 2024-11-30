@@ -19,6 +19,8 @@
 +++14. hash password
 15. add auth middleware just as a template handler
 +++16. healthcheck
+17. [maybe]mongo readpref configuration
+18. remove version from user collection because not used
 
 
 

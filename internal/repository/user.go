@@ -15,7 +15,7 @@ import (
 )
 
 type userRepository struct {
-	collection mongohandler.Collection
+	collection *mongo.Collection
 }
 
 func NewUserRepository(db mongohandler.MongoDBWrapper) (UserRepository, error) {
@@ -48,7 +48,7 @@ func (r *userRepository) createIndexes() error {
 	// Create indexes
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	_, err := r.collection.CreateManyIndexes(ctx, indexModels)
+	_, err := r.collection.Indexes().CreateMany(ctx, indexModels)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error creating indexes for users collection", slog.Any("error", err))
 		return err
