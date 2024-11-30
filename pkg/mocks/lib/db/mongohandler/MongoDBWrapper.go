@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	context "context"
+
 	mongohandler "github.com/nsaltun/userapi/pkg/lib/db/mongohandler"
 	mock "github.com/stretchr/testify/mock"
 )
@@ -35,6 +37,24 @@ func (_m *MongoDBWrapper) Collection(name string) mongohandler.Collection {
 // Disconnect provides a mock function with given fields:
 func (_m *MongoDBWrapper) Disconnect() {
 	_m.Called()
+}
+
+// HealthCheck provides a mock function with given fields: ctx
+func (_m *MongoDBWrapper) HealthCheck(ctx context.Context) error {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HealthCheck")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewMongoDBWrapper creates a new instance of MongoDBWrapper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

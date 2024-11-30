@@ -18,6 +18,7 @@
 +++13. separate handler from the service.
 +++14. hash password
 15. add auth middleware just as a template handler
++++16. healthcheck
 
 
 
@@ -32,3 +33,4 @@
 5. Log req resp middleware
 6. Readme
 7. add auth middleware just as a template handler
++++8. Health check

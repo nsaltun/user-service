@@ -9,6 +9,7 @@ import (
 	"github.com/nsaltun/userapi/internal/router"
 	"github.com/nsaltun/userapi/internal/service"
 	"github.com/nsaltun/userapi/pkg/lib/db/mongohandler"
+	"github.com/nsaltun/userapi/pkg/lib/healthcheck"
 	"github.com/nsaltun/userapi/pkg/lib/httpserver"
 	"github.com/nsaltun/userapi/pkg/lib/logging"
 )
@@ -27,8 +28,10 @@ func main() {
 	userSvc := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userSvc)
 
-	routerMux := router.NewRouter(userHandler)
+	mux := router.NewRouter(userHandler)
+	health := healthcheck.NewHealthCheck(mongodb)
+	health.Init(mux)
 
-	server := httpserver.NewServer(routerMux)
+	server := httpserver.NewServer(mux)
 	server.InitServer()
 }

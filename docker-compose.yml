@@ -16,11 +16,17 @@ services:
     container_name: user-api
     depends_on:
       - mongodb # Ensure MongoDB starts first
+    env_file:
+      - .env
     environment:
       - MONGODB_URI=mongodb://mongodb:27017
-    
     ports:
       - "8080:3000" # Expose Go app port
+    healthcheck:
+      test: "curl -f http://localhost:3000/health"
+      interval: 30s
+      timeout: 5s
+      retries: 2
     networks:
       - app_network
 

@@ -1,4 +1,4 @@
-FROM golang:1.23.3-bullseye AS build-stage
+FROM golang:1.23.3-bullseye AS build
 
 WORKDIR /app
 
@@ -11,11 +11,15 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o ./cmd/user ./cmd/main.go
 
 
 # Deploy the application binary into a lean image
-FROM gcr.io/distroless/base-debian11 AS build-release-stage
+FROM debian:bullseye-slim AS build-release-stage
 
 WORKDIR /
 
-COPY --from=build-stage /app/cmd/user /user
+COPY --from=build /app/cmd/user /user
+
+# Install curl and clean up the package cache to minimize image size
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.

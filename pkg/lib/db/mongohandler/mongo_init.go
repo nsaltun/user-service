@@ -3,8 +3,8 @@ package mongohandler
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/spf13/viper"
@@ -13,12 +13,13 @@ import (
 )
 
 var (
-	ConnectionTimeoutInSeconds time.Duration = 3 * time.Second
+	ConnectionTimeoutInSecond time.Duration = 3 * time.Second
 )
 
 // MongoDBWrapper defines an interface for interacting with the MongoDB database
 type MongoDBWrapper interface {
 	Collection(name string) Collection
+	HealthCheck(ctx context.Context) error
 	Disconnect()
 }
 
@@ -32,7 +33,8 @@ type mongoDBWrapper struct {
 func InitMongoDB() MongoDBWrapper {
 	mongoDB, err := newMongoDB()
 	if err != nil {
-		log.Fatalf("MongoDB initialization failed: %v", err)
+		slog.Error("MongoDB initialization failed", slog.Any("error", err))
+		os.Exit(1)
 	}
 	return mongoDB
 }
@@ -47,7 +49,7 @@ func newMongoDB() (MongoDBWrapper, error) {
 	uri := vi.GetString("MONGODB_URI")
 	dbName := vi.GetString("DB_NAME")
 
-	ctx, cancel := context.WithTimeout(context.Background(), ConnectionTimeoutInSeconds)
+	ctx, cancel := context.WithTimeout(context.Background(), ConnectionTimeoutInSecond)
 	defer cancel()
 
 	// Initialize MongoDB client
@@ -87,4 +89,11 @@ func (m *mongoDBWrapper) Disconnect() {
 	} else {
 		slog.InfoContext(ctx, "Disconnected from MongoDB")
 	}
+}
+
+func (m *mongoDBWrapper) HealthCheck(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	return m.client.Ping(ctx, nil)
 }

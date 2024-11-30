@@ -19,6 +19,9 @@ compose-down:
 mongo-up:
 	docker compose up mongodb -d
 
+mongo-down:
+	docker compose down mongodb
+
 mockery-install:
 	go install github.com/vektra/mockery/v2/...@v$(MOCKERY_VERSION)
 
