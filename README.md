@@ -52,6 +52,10 @@ Run `make run` in command line to run with default parameters.
 
 - List Users: `curl -X POST 'localhost:8080/users/filter?limit=5&offset=0' --header "authorization: Bearer valid-token" -d '{"firstName":"John", "country":"TR"}'`
 
+## Data seeding
+For data seeding you can use user-service-automation after running user-service app. There is a test method `TestUserCreate` under `tests/user_create_test` to create many user as defined in `CreateUserAmount` const.
+
+
 ### Response examples
 #### Success response
 ---
