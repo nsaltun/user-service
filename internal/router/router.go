@@ -8,6 +8,7 @@ import (
 	"github.com/nsaltun/userapi/pkg/lib/middleware"
 )
 
+// NewRouter adds endpoint patterns with handlers and middlewares into http.ServeMux and returns that mux
 func NewRouter(userHandler handler.UserHandler, health health.HealthCheck) http.Handler {
 	mux := http.NewServeMux()
 	// Register routes using the custom context handler

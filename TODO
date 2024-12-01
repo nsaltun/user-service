@@ -1,36 +1,35 @@
 +++1. Slog configuration for printing in Json format
+
 +++2. Http middlewares:
-    ++++1. Logging middleware which should log both request and response.
+    - Logging
+    - Auth
+
 3. [maybe] Request Validation
+
 +++4. Mongo DB initialization
+
 +++5. Pagination
+
 +++6. Docker
+
 +++7. Makefile
+
 8. Unit tests
     +++ 1. service tests
     2. repo tests
     +++3. handler tests
     4. lib tests
+
 9. Readme
+
 +++10. Error handling ***
+
 +++11. Fix Update
+
 +++12. separate handler from the service.
+
 +++13. hash password
-14. add auth middleware just as a template handler
+
++++14. add auth middleware just as a template handler
+
 +++15. healthcheck
-
-
-
----- Order -----
-+++0. Separate handler from the service
-+++1. Docker
-+++2. Error Handling
-    +++2.1 Check all places if returning any fmt.Errorf or smth like that
-    +++2.2 Check places for log.Fatalf or panic
-+3. Unit tests
-+++4. Makefile
-+++5. Log req resp middleware
-6. Readme
-+++7. add auth middleware just as a template handler
-+++8. Health check
-9. Remove logic from repository like error handling or setting fields there while creating a record

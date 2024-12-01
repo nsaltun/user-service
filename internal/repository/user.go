@@ -14,10 +14,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// userRepository implementor
 type userRepository struct {
 	collection *mongo.Collection
 }
 
+// NewUserRepository returns new instance to be able to use UserRepository interface methods.
+//
+// Creates index in this method
 func NewUserRepository(db mongohandler.MongoDBWrapper) (UserRepository, error) {
 	repo := &userRepository{db.Collection("users")}
 	err := repo.createIndexes()
@@ -28,6 +32,8 @@ func NewUserRepository(db mongohandler.MongoDBWrapper) (UserRepository, error) {
 }
 
 // createIndexes creates indexes specific to the User collection
+//
+// Creating index for `email`(unique) and `nickName`(unique) and `country`.
 func (r *userRepository) createIndexes() error {
 	// Define index models
 	indexModels := []mongo.IndexModel{
@@ -82,6 +88,20 @@ func (r *userRepository) Create(ctx context.Context, user *model.User) error {
 }
 
 // Update user by id
+//
+// Excluding password from the response.
+//
+// Sanitizing fields for update.
+//
+// Checking uniqueness of user data.
+//
+// - Returns NotFound when record is not found
+//
+// - Returns Conflict when duplicated key error occured or uniqueness violated
+//
+// - Returns internal error for other error cases
+//
+// Returns updated user when it is successful with updated `UpdatedAt` and `Version` field
 func (r *userRepository) Update(ctx context.Context, id string, user *model.User) (*model.User, error) {
 	err := r.checkUniqueness(ctx, id, user)
 	if err != nil {
@@ -130,7 +150,7 @@ func (r *userRepository) Update(ctx context.Context, id string, user *model.User
 	return updatedUser, nil
 }
 
-// ListByFilter fetches users based on a dynamic filter
+// ListByFilter fetches users based on a dynamic filter with pagination and cursor
 func (r *userRepository) ListByFilter(ctx context.Context, filter bson.M, limit int, offset int) ([]model.User, int64, error) {
 	var users []model.User
 
@@ -212,6 +232,9 @@ func (r *userRepository) Get(ctx context.Context, id string) (*model.User, error
 	return user, nil
 }
 
+// checkUniqueness checks uniqueness by filtering with unique constraint fields.
+//
+// Returns Conflict error if duplicated record exists.
 func (r *userRepository) checkUniqueness(ctx context.Context, id string, user *model.User) error {
 	// Pre-check for uniqueness
 	filter := bson.M{
