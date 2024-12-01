@@ -16,10 +16,12 @@ var (
 	ConnectionTimeoutInSecond time.Duration = 3 * time.Second
 )
 
+type HealthFn func(context.Context) error
+
 // MongoDBWrapper defines an interface for interacting with the MongoDB database
 type MongoDBWrapper interface {
 	Collection(name string) *mongo.Collection
-	HealthCheck(ctx context.Context) error
+	HealthChecker() HealthFn
 	Disconnect()
 }
 
@@ -89,9 +91,11 @@ func (m *mongoDBWrapper) Disconnect() {
 	}
 }
 
-func (m *mongoDBWrapper) HealthCheck(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
+func (m *mongoDBWrapper) HealthChecker() HealthFn {
+	return func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
 
-	return m.client.Ping(ctx, nil)
+		return m.client.Ping(ctx, nil)
+	}
 }

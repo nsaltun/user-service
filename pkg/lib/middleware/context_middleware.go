@@ -1,37 +1,41 @@
-package httpwrap
+package middleware
 
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 )
 
-type HandlerFunc func(*HttpContext) error
-
 // HttpContext is a custom wrapper around http.ResponseWriter and http.Request
 type HttpContext struct {
 	Response http.ResponseWriter
 	Request  *http.Request
+	UserID   string // custom field (e.g., for auth)
 }
 
-// NewContext creates a new Context instance
-func NewContext(w http.ResponseWriter, r *http.Request) *HttpContext {
-	return &HttpContext{
-		Response: w,
-		Request:  r,
-	}
-}
+// Middleware type that accepts and returns a function with HttpContext
+type Middleware func(next CustomHandler) CustomHandler
 
-// ContextMiddleware injects the custom Context and wraps the custom handler
-func ContextMiddleware(next HandlerFunc) http.HandlerFunc {
+// CustomHandler is the handler signature using HttpContext
+type CustomHandler func(*HttpContext) error
+
+// MiddlewareRunner chains middlewares and passes HttpContext to the final handler
+func MiddlewareRunner(handler CustomHandler, middlewares ...Middleware) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Create the custom context
-		ctx := NewContext(w, r)
+		// Initialize HttpContext
+		ctx := &HttpContext{Response: w, Request: r}
 
-		// Call the custom handler with the context
-		next(ctx)
+		// Apply middlewares recursively
+		final := handler
+		for i := len(middlewares) - 1; i >= 0; i-- {
+			final = middlewares[i](final)
+		}
+
+		// Execute the final handler with HttpContext
+		final(ctx)
 	}
 }
 
@@ -52,6 +56,7 @@ func (c *HttpContext) BodyParser(model interface{}) error {
 // JSON sends a JSON response with the given status code
 func (c *HttpContext) JSON(status int, payload interface{}) error {
 	c.Response.Header().Set("Content-Type", "application/json")
+	c.Response.Header().Set("statusCode", fmt.Sprint(status))
 	c.Response.WriteHeader(status)
 	json.NewEncoder(c.Response).Encode(payload)
 	return nil

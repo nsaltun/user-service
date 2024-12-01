@@ -13,9 +13,24 @@ type HealthCheck struct {
 	mock.Mock
 }
 
-// Init provides a mock function with given fields: mux
-func (_m *HealthCheck) Init(mux *http.ServeMux) {
-	_m.Called(mux)
+// HealthCheckHandler provides a mock function with given fields:
+func (_m *HealthCheck) HealthCheckHandler() http.HandlerFunc {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for HealthCheckHandler")
+	}
+
+	var r0 http.HandlerFunc
+	if rf, ok := ret.Get(0).(func() http.HandlerFunc); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(http.HandlerFunc)
+		}
+	}
+
+	return r0
 }
 
 // NewHealthCheck creates a new instance of HealthCheck. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

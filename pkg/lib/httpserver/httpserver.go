@@ -18,7 +18,7 @@ type HttpServer struct {
 	server *http.Server
 }
 
-func NewServer(mux *http.ServeMux) *HttpServer {
+func NewServer(handler http.Handler) *HttpServer {
 	vi := viper.New()
 	vi.AutomaticEnv()
 	vi.SetDefault("HOST_ADDRESS", "0.0.0.0")
@@ -30,7 +30,7 @@ func NewServer(mux *http.ServeMux) *HttpServer {
 	return &HttpServer{
 		server: &http.Server{
 			Addr:         fmt.Sprintf("%s:%s", vi.Get("HOST_ADDRESS"), vi.Get("PORT")),
-			Handler:      mux,
+			Handler:      handler,
 			ReadTimeout:  time.Duration(vi.GetInt("READ_TIMEOUT_IN_SECONDS")) * time.Second,
 			WriteTimeout: time.Duration(vi.GetInt("WRITE_TIMEOUT_IN_SECONDS")) * time.Second,
 			IdleTimeout:  time.Duration(vi.GetInt("IDLE_TIMEOUT_IN_SECONDS")) * time.Second,

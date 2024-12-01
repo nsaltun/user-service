@@ -4,16 +4,20 @@ import (
 	"net/http"
 
 	"github.com/nsaltun/userapi/internal/handler"
-	"github.com/nsaltun/userapi/pkg/lib/middlewares/httpwrap"
+	"github.com/nsaltun/userapi/pkg/lib/health"
+	"github.com/nsaltun/userapi/pkg/lib/middleware"
 )
 
-func NewRouter(userHandler handler.UserHandler) *http.ServeMux {
+func NewRouter(userHandler handler.UserHandler, health health.HealthCheck) http.Handler {
 	mux := http.NewServeMux()
 	// Register routes using the custom context handler
-	mux.HandleFunc("POST /users", httpwrap.ContextMiddleware(userHandler.CreateUser))
-	mux.HandleFunc("PUT /users/{id}", httpwrap.ContextMiddleware(userHandler.UpdateUserById))
-	mux.HandleFunc("DELETE /users/{id}", httpwrap.ContextMiddleware(userHandler.DeleteUserById))
-	mux.HandleFunc("POST /users/filter", httpwrap.ContextMiddleware(userHandler.ListUsers))
+	mux.HandleFunc("POST /users", middleware.MiddlewareRunner(userHandler.CreateUser, middleware.LoggingMiddleware, middleware.AuthMiddleware))
+	mux.HandleFunc("PUT /users/{id}", middleware.MiddlewareRunner(userHandler.UpdateUserById, middleware.LoggingMiddleware, middleware.AuthMiddleware))
+	mux.HandleFunc("DELETE /users/{id}", middleware.MiddlewareRunner(userHandler.DeleteUserById, middleware.LoggingMiddleware, middleware.AuthMiddleware))
+	mux.HandleFunc("POST /users/filter", middleware.MiddlewareRunner(userHandler.ListUsers, middleware.LoggingMiddleware, middleware.AuthMiddleware))
+
+	//healthchecker
+	mux.HandleFunc("GET /health", health.HealthCheckHandler())
 
 	return mux
 }

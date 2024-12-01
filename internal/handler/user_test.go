@@ -12,7 +12,7 @@ import (
 	mocks "github.com/nsaltun/userapi/internal/mocks/service"
 	"github.com/nsaltun/userapi/internal/model"
 	"github.com/nsaltun/userapi/pkg/lib/errwrap"
-	"github.com/nsaltun/userapi/pkg/lib/middlewares/httpwrap"
+	"github.com/nsaltun/userapi/pkg/lib/middleware"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -148,7 +148,7 @@ func TestCreateUser(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			//execute
-			httpCtx := httpwrap.NewContext(w, req)
+			httpCtx := &middleware.HttpContext{Response: w, Request: req}
 			h.CreateUser(httpCtx)
 			b, err := io.ReadAll(w.Body)
 

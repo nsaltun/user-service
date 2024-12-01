@@ -8,14 +8,14 @@ import (
 	"github.com/nsaltun/userapi/internal/model"
 	"github.com/nsaltun/userapi/internal/service"
 	"github.com/nsaltun/userapi/pkg/lib/errwrap"
-	"github.com/nsaltun/userapi/pkg/lib/middlewares/httpwrap"
+	"github.com/nsaltun/userapi/pkg/lib/middleware"
 )
 
 type UserHandler interface {
-	CreateUser(c *httpwrap.HttpContext) error
-	UpdateUserById(c *httpwrap.HttpContext) error
-	DeleteUserById(c *httpwrap.HttpContext) error
-	ListUsers(c *httpwrap.HttpContext) error
+	CreateUser(c *middleware.HttpContext) error
+	UpdateUserById(c *middleware.HttpContext) error
+	DeleteUserById(c *middleware.HttpContext) error
+	ListUsers(c *middleware.HttpContext) error
 }
 
 type userHandler struct {
@@ -26,7 +26,7 @@ func NewUserHandler(userService service.UserService) UserHandler {
 	return &userHandler{userService}
 }
 
-func (u *userHandler) CreateUser(c *httpwrap.HttpContext) error {
+func (u *userHandler) CreateUser(c *middleware.HttpContext) error {
 	var user model.User
 	if err := c.BodyParser(&user); err != nil {
 		slog.Info("error while unmarshalling request body.", slog.Any("error", err.Error()))
@@ -61,7 +61,7 @@ func (u *userHandler) CreateUser(c *httpwrap.HttpContext) error {
 	return successResp(c, http.StatusCreated, createdUser)
 }
 
-func (u *userHandler) UpdateUserById(c *httpwrap.HttpContext) error {
+func (u *userHandler) UpdateUserById(c *middleware.HttpContext) error {
 	var user model.User
 	if err := c.BodyParser(&user); err != nil {
 		slog.Info("error while unmarshalling request body.", slog.Any("error", err.Error()))
@@ -84,7 +84,7 @@ func (u *userHandler) UpdateUserById(c *httpwrap.HttpContext) error {
 	return successResp(c, http.StatusOK, updatedUser)
 }
 
-func (u *userHandler) DeleteUserById(c *httpwrap.HttpContext) error {
+func (u *userHandler) DeleteUserById(c *middleware.HttpContext) error {
 	id := c.Param("id")
 	if id == "" {
 		return errorResp(c, http.StatusBadRequest, errwrap.ErrBadRequest.SetMessage("id not provided"))
@@ -98,7 +98,7 @@ func (u *userHandler) DeleteUserById(c *httpwrap.HttpContext) error {
 	return successResp(c, http.StatusOK, nil)
 }
 
-func (u *userHandler) ListUsers(c *httpwrap.HttpContext) error {
+func (u *userHandler) ListUsers(c *middleware.HttpContext) error {
 	var userReq model.UserFilter
 	if err := c.BodyParser(&userReq); err != nil {
 		slog.Info("error while unmarshalling request body.", slog.Any("error", err.Error()))
@@ -117,18 +117,18 @@ func (u *userHandler) ListUsers(c *httpwrap.HttpContext) error {
 	return successResp(c, http.StatusOK, paginatedData)
 }
 
-func successResp(c *httpwrap.HttpContext, httpStatus int, data interface{}) error {
+func successResp(c *middleware.HttpContext, httpStatus int, data interface{}) error {
 	if data == nil {
 		data = struct{}{}
 	}
 	return c.JSON(httpStatus, data)
 }
 
-func errorResp(c *httpwrap.HttpContext, httpstatus int, err errwrap.IError) error {
+func errorResp(c *middleware.HttpContext, httpstatus int, err errwrap.IError) error {
 	return c.JSON(httpstatus, err.ErrorResp())
 }
 
-func errorRespWithMapping(c *httpwrap.HttpContext, err error) error {
+func errorRespWithMapping(c *middleware.HttpContext, err error) error {
 	iError, ok := err.(errwrap.IError)
 	if !ok {
 		return c.JSON(http.StatusInternalServerError, errwrap.ErrInternal.ErrorResp())

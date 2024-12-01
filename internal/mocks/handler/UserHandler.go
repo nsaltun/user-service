@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	httpwrap "github.com/nsaltun/userapi/pkg/lib/middlewares/httpwrap"
+	middleware "github.com/nsaltun/userapi/pkg/lib/middleware"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -13,7 +13,7 @@ type UserHandler struct {
 }
 
 // CreateUser provides a mock function with given fields: c
-func (_m *UserHandler) CreateUser(c *httpwrap.HttpContext) error {
+func (_m *UserHandler) CreateUser(c *middleware.HttpContext) error {
 	ret := _m.Called(c)
 
 	if len(ret) == 0 {
@@ -21,7 +21,7 @@ func (_m *UserHandler) CreateUser(c *httpwrap.HttpContext) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*httpwrap.HttpContext) error); ok {
+	if rf, ok := ret.Get(0).(func(*middleware.HttpContext) error); ok {
 		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
@@ -31,7 +31,7 @@ func (_m *UserHandler) CreateUser(c *httpwrap.HttpContext) error {
 }
 
 // DeleteUserById provides a mock function with given fields: c
-func (_m *UserHandler) DeleteUserById(c *httpwrap.HttpContext) error {
+func (_m *UserHandler) DeleteUserById(c *middleware.HttpContext) error {
 	ret := _m.Called(c)
 
 	if len(ret) == 0 {
@@ -39,7 +39,7 @@ func (_m *UserHandler) DeleteUserById(c *httpwrap.HttpContext) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*httpwrap.HttpContext) error); ok {
+	if rf, ok := ret.Get(0).(func(*middleware.HttpContext) error); ok {
 		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
@@ -49,7 +49,7 @@ func (_m *UserHandler) DeleteUserById(c *httpwrap.HttpContext) error {
 }
 
 // ListUsers provides a mock function with given fields: c
-func (_m *UserHandler) ListUsers(c *httpwrap.HttpContext) error {
+func (_m *UserHandler) ListUsers(c *middleware.HttpContext) error {
 	ret := _m.Called(c)
 
 	if len(ret) == 0 {
@@ -57,7 +57,7 @@ func (_m *UserHandler) ListUsers(c *httpwrap.HttpContext) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*httpwrap.HttpContext) error); ok {
+	if rf, ok := ret.Get(0).(func(*middleware.HttpContext) error); ok {
 		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)
@@ -67,7 +67,7 @@ func (_m *UserHandler) ListUsers(c *httpwrap.HttpContext) error {
 }
 
 // UpdateUserById provides a mock function with given fields: c
-func (_m *UserHandler) UpdateUserById(c *httpwrap.HttpContext) error {
+func (_m *UserHandler) UpdateUserById(c *middleware.HttpContext) error {
 	ret := _m.Called(c)
 
 	if len(ret) == 0 {
@@ -75,7 +75,7 @@ func (_m *UserHandler) UpdateUserById(c *httpwrap.HttpContext) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*httpwrap.HttpContext) error); ok {
+	if rf, ok := ret.Get(0).(func(*middleware.HttpContext) error); ok {
 		r0 = rf(c)
 	} else {
 		r0 = ret.Error(0)

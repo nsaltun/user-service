@@ -1,4 +1,4 @@
-package healthcheck
+package health
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 type HealthCheck interface {
-	Init(mux *http.ServeMux)
+	HealthCheckHandler() http.HandlerFunc
 }
 
 type HealthCheckResponse struct {
@@ -19,17 +19,13 @@ type HealthCheckResponse struct {
 }
 
 type healthCheck struct {
-	mongowrapper mongohandler.MongoDBWrapper
+	mongoHealthCheck mongohandler.HealthFn
 }
 
-func NewHealthCheck(mongo mongohandler.MongoDBWrapper) HealthCheck {
+func NewHealthCheck(mongoHealthCheck mongohandler.HealthFn) HealthCheck {
 	return &healthCheck{
-		mongo,
+		mongoHealthCheck,
 	}
-}
-
-func (h *healthCheck) Init(mux *http.ServeMux) {
-	mux.HandleFunc("GET /health", h.HealthCheckHandler())
 }
 
 // HealthCheckHandler handles the /health endpoint
@@ -42,7 +38,7 @@ func (h *healthCheck) HealthCheckHandler() http.HandlerFunc {
 		g, ctx := errgroup.WithContext(ctx)
 
 		g.Go(func() error {
-			if err := h.mongowrapper.HealthCheck(ctx); err != nil {
+			if err := h.mongoHealthCheck(ctx); err != nil {
 				health.Status = "unhealthy"
 				health.Details["MongoDB"] = "DOWN"
 			} else {
