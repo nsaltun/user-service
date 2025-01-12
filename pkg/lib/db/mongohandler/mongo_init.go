@@ -18,69 +18,72 @@ var (
 
 type HealthFn func(context.Context) error
 
-// MongoDBWrapper defines an interface for interacting with the MongoDB database
-type MongoDBWrapper interface {
-	Collection(name string) *mongo.Collection
-	HealthChecker() HealthFn
-	Disconnect()
+type config struct {
+	MONGODB_URI string
+	DB_NAME     string
 }
 
-// mongoDBWrapper is the concrete implementation of MongoDBWrapper
-type mongoDBWrapper struct {
+// MongoDBWrapper is the concrete implementation of MongoDBWrapper
+type MongoDBWrapper struct {
+	Database *mongo.Database
+	conf     config
 	client   *mongo.Client
-	database *mongo.Database
 }
 
-// InitMongoDB sets up the MongoDB connection and returns the wrapper interface
-func InitMongoDB() MongoDBWrapper {
-	mongoDB, err := newMongoDB()
-	if err != nil {
-		slog.Error("MongoDB initialization failed", slog.Any("error", err))
-		os.Exit(1)
-	}
-	return mongoDB
-}
-
-// newMongoDB initializes the MongoDB client and returns an instance of MongoDBWrapper
-func newMongoDB() (MongoDBWrapper, error) {
+func New() *MongoDBWrapper {
 	vi := viper.New()
 	vi.AutomaticEnv()
 
 	vi.SetDefault("MONGODB_URI", "mongodb://127.0.0.1:27017")
 	vi.SetDefault("DB_NAME", "users")
-	uri := vi.GetString("MONGODB_URI")
-	dbName := vi.GetString("DB_NAME")
 
+	return &MongoDBWrapper{
+		conf: config{
+			MONGODB_URI: vi.GetString("MONGODB_URI"),
+			DB_NAME:     vi.GetString("DB_NAME"),
+		},
+	}
+}
+
+// InitMongoDB sets up the MongoDB connection. If error occurs exit the program.
+func (m *MongoDBWrapper) InitMongoDB() {
+	err := m.initDB()
+	if err != nil {
+		slog.Error("MongoDB initialization failed", slog.Any("error", err))
+		os.Exit(1)
+	}
+}
+
+// initDB initializes the MongoDB. Return error.
+func (m *MongoDBWrapper) initDB() error {
 	ctx, cancel := context.WithTimeout(context.Background(), ConnectionTimeoutInSecond)
 	defer cancel()
 
 	// Initialize MongoDB client
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(m.conf.MONGODB_URI))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
+		return fmt.Errorf("failed to connect to MongoDB: %v", err)
 	}
 
 	// Ping the database to ensure the connection is valid
 	if err := client.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
+		return fmt.Errorf("failed to ping MongoDB: %v", err)
 	}
 
-	slog.InfoContext(ctx, fmt.Sprintf("Connected to MongoDB with %s", uri))
+	m.client = client
+	m.Database = client.Database(m.conf.DB_NAME)
 
-	// Return the concrete implementation of MongoDBWrapper
-	return &mongoDBWrapper{
-		client:   client,
-		database: client.Database(dbName),
-	}, nil
+	slog.InfoContext(ctx, fmt.Sprintf("Connected to MongoDB with %s", m.conf.MONGODB_URI))
+	return nil
 }
 
 // Collection returns a MongoDB collection from the wrapped database
-func (m *mongoDBWrapper) Collection(name string) *mongo.Collection {
-	return m.database.Collection(name)
+func (m *MongoDBWrapper) Collection(name string) *mongo.Collection {
+	return m.Database.Collection(name)
 }
 
 // Disconnect gracefully closes the MongoDB connection
-func (m *mongoDBWrapper) Disconnect() {
+func (m *MongoDBWrapper) Disconnect() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -91,7 +94,7 @@ func (m *mongoDBWrapper) Disconnect() {
 	}
 }
 
-func (m *mongoDBWrapper) HealthChecker() HealthFn {
+func (m *MongoDBWrapper) HealthChecker() HealthFn {
 	return func(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 		defer cancel()

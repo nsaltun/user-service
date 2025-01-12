@@ -1,6 +1,9 @@
 package errwrap
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type IError interface {
 	error
@@ -28,6 +31,17 @@ func NewError(msg string, code string) IError {
 	return &errorWrapper{
 		message: msg,
 		code:    code,
+	}
+}
+
+func NewFromError(err error) IError {
+	var e IError
+	if errors.As(err, &e) {
+		return e
+	}
+
+	return &errorWrapper{
+		originErr: err,
 	}
 }
 

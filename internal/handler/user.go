@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -14,6 +15,7 @@ import (
 // UserHandler is an interface for http handler methods for user operations
 type UserHandler interface {
 	CreateUser(c *middleware.HttpContext) error
+	CreateUserCpy(ctx context.Context, req *CreateUserRequest) (*CreateUserResponse, int, error)
 	UpdateUserById(c *middleware.HttpContext) error
 	DeleteUserById(c *middleware.HttpContext) error
 	ListUsers(c *middleware.HttpContext) error

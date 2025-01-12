@@ -17,6 +17,8 @@ func NewRouter(userHandler handler.UserHandler, health health.HealthCheck) http.
 	mux.HandleFunc("DELETE /users/{id}", middleware.MiddlewareRunner(userHandler.DeleteUserById, middleware.LoggingMiddleware, middleware.AuthMiddleware))
 	mux.HandleFunc("POST /users/filter", middleware.MiddlewareRunner(userHandler.ListUsers, middleware.LoggingMiddleware, middleware.AuthMiddleware))
 
+	mux.HandleFunc("POST /users-cpy", middleware.MiddlewareRunner(handler.Serve(userHandler.CreateUserCpy), middleware.LoggingMiddleware, middleware.AuthMiddleware))
+
 	//healthchecker
 	mux.HandleFunc("GET /health", health.HealthCheckHandler())
 

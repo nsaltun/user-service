@@ -22,7 +22,7 @@ func NewServer(handler http.Handler) *HttpServer {
 	vi := viper.New()
 	vi.AutomaticEnv()
 	vi.SetDefault("HOST_ADDRESS", "0.0.0.0")
-	vi.SetDefault("PORT", "3000")
+	vi.SetDefault("PORT", "8080")
 	vi.SetDefault("READ_TIMEOUT_IN_SECONDS", 10)
 	vi.SetDefault("WRITE_TIMEOUT_IN_SECONDS", 10)
 	vi.SetDefault("IDLE_TIMEOUT_IN_SECONDS", 10)

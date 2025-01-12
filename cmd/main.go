@@ -18,7 +18,8 @@ func main() {
 	logging.InitSlog()
 	slog.Info("----USER API----")
 
-	mongodb := mongohandler.InitMongoDB()
+	mongodb := mongohandler.New()
+	mongodb.InitMongoDB()
 	defer mongodb.Disconnect()
 
 	userRepo, err := repository.NewUserRepository(mongodb)

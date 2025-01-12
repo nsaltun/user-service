@@ -22,7 +22,7 @@ type userRepository struct {
 // NewUserRepository returns new instance to be able to use UserRepository interface methods.
 //
 // Creates index in this method
-func NewUserRepository(db mongohandler.MongoDBWrapper) (UserRepository, error) {
+func NewUserRepository(db *mongohandler.MongoDBWrapper) (UserRepository, error) {
 	repo := &userRepository{db.Collection("users")}
 	err := repo.createIndexes()
 	if err != nil {
@@ -264,7 +264,6 @@ func sanitizeUserForUpdate(user *model.User) bson.M {
 		"firstName": user.FirstName,
 		"lastName":  user.LastName,
 		"nickName":  user.NickName,
-		"password":  user.Password,
 		"email":     user.Email,
 		"country":   user.Country,
 		"updatedAt": user.UpdatedAt,
