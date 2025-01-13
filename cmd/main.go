@@ -35,6 +35,4 @@ func main() {
 	fiberApp := httpserver.NewFiberServer()
 	router.NewFiberRouter(fiberApp.App, userHandler, healthChecker)
 	fiberApp.Listen()
-	// server := httpserver.NewServer(httpHandler)
-	// server.InitServer()
 }
