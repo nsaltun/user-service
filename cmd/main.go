@@ -4,7 +4,7 @@ import (
 	"log"
 	"log/slog"
 
-	"github.com/nsaltun/userapi/internal/handler"
+	"github.com/nsaltun/userapi/internal/handler/user"
 	"github.com/nsaltun/userapi/internal/repository"
 	"github.com/nsaltun/userapi/internal/router"
 	"github.com/nsaltun/userapi/internal/service"
@@ -27,11 +27,14 @@ func main() {
 		log.Fatalf("Failed to initialize MongoDB: %v", err)
 	}
 	userSvc := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userSvc)
+	userHandler := user.NewUserHandler(userSvc)
 
 	healthChecker := health.NewHealthCheck(mongodb.HealthChecker())
-	httpHandler := router.NewRouter(userHandler, healthChecker)
+	// httpHandler := router.NewRouter(userHandler, healthChecker)
 
-	server := httpserver.NewServer(httpHandler)
-	server.InitServer()
+	fiberApp := httpserver.NewFiberServer()
+	router.NewFiberRouter(fiberApp.App, userHandler, healthChecker)
+	fiberApp.Listen()
+	// server := httpserver.NewServer(httpHandler)
+	// server.InitServer()
 }

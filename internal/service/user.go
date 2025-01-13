@@ -76,6 +76,7 @@ func (u *userService) CreateUser(ctx context.Context, user *model.User) (*model.
 //
 // Returns created user with ID,CreatedAt,UpdatedAt,Status when operation is successful.
 func (u *userService) UpdateUserById(ctx context.Context, id string, user model.User) (*model.User, error) {
+	user.Id = ""
 	updatedUser, err := u.userRepository.Update(ctx, id, &user)
 	if err != nil {
 		slog.Info("error from repository", slog.Any("error", err.Error()))

@@ -49,6 +49,7 @@ func (c *HttpContext) BodyParser(model interface{}) error {
 	if c.Request.Body == nil {
 		return errors.New("request body is empty")
 	}
+
 	defer c.Request.Body.Close()
 	return json.NewDecoder(c.Request.Body).Decode(model)
 }
